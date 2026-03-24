@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotizador de Materiales</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --border: #2a2a2a;
+    --accent: #e8ff47;
+    --accent2: #ff6b35;
+    --text: #f0f0f0;
+    --muted: #666;
+    --trovicel: #e8ff47;
+    --coroplast: #47c2ff;
+    --vinil: #ff6b35;
+    --lona: #b47fff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .title {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .meta-inputs { display: flex; gap: 12px; align-items: flex-end; }
+  .meta-field { display: flex; flex-direction: column; gap: 4px; }
+  .meta-field label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .meta-field input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    width: 180px;
+    transition: border-color 0.2s;
+  }
+  .meta-field input:focus { outline: none; border-color: var(--accent); }
+
+  /* PRECIOS EDITABLES */
+  .prices-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .prices-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .prices-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .price-item { display: flex; flex-direction: column; gap: 6px; }
+  .price-label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .price-item:nth-child(1) .price-label { color: var(--trovicel); }
+  .price-item:nth-child(2) .price-label { color: var(--coroplast); }
+  .price-item:nth-child(3) .price-label { color: var(--vinil); }
+  .price-item:nth-child(4) .price-label { color: var(--lona); }
+
+  .price-input-wrap { position: relative; }
+  .price-input-wrap span {
+    position: absolute; left: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; color: var(--muted);
+  }
+  .price-input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px 8px 22px;
+    border-radius: 6px;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+  .price-input:focus { outline: none; border-color: var(--accent); }
+  .price-sub { font-size: 10px; color: var(--muted); }
+
+  /* FORM AGREGAR ITEM */
+  .add-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .add-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .add-form {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .field input, .field select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field select option { background: #1a1a1a; }
+
+  .btn-add {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: transform 0.1s, opacity 0.2s;
+    white-space: nowrap;
+    height: 40px;
+  }
+  .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-add:active { transform: translateY(0); }
+
+  /* TABLA */
+  .table-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  thead th:last-child { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  tbody td {
+    padding: 14px 16px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  td.amount { font-family: 'DM Mono', monospace; font-size: 12px; text-align: right; }
+  td.subtotal { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600; text-align: right; color: var(--accent); }
+
+  .chip {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.08);
+  }
+  .chip.trovicel { color: var(--trovicel); background: rgba(232,255,71,0.1); }
+  .chip.coroplast { color: var(--coroplast); background: rgba(71,194,255,0.1); }
+  .chip.vinil { color: var(--vinil); background: rgba(255,107,53,0.1); }
+  .chip.lona { color: var(--lona); background: rgba(180,127,255,0.1); }
+
+  .btn-del {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 16px;
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-del:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .empty-row td {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 40px;
+  }
+
+  /* TOTALES */
+  .totals-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .totals-box { min-width: 320px; }
+  .totals-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .totals-row:last-child { border-bottom: none; }
+  .totals-row .label { color: var(--muted); }
+  .totals-row .val { font-family: 'DM Mono', monospace; font-size: 13px; }
+  .totals-row.discount .val { color: var(--accent2); }
+  .totals-row.grand { padding-top: 16px; margin-top: 4px; }
+  .totals-row.grand .label { font-weight: 700; font-size: 15px; color: var(--text); }
+  .totals-row.grand .val { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 700; color: var(--accent); }
+
+  .discount-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .discount-row label { color: var(--muted); font-size: 13px; flex: 1; }
+  .discount-row input {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    width: 64px;
+    text-align: center;
+  }
+  .discount-row input:focus { outline: none; border-color: var(--accent); }
+  .discount-row span { color: var(--muted); font-size: 13px; }
+
+  /* DESGLOSE POR MATERIAL */
+  .breakdown-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+  .breakdown-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .breakdown-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .breakdown-card .mat { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .breakdown-card .m2 { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .breakdown-card .total-mat { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 600; margin-top: 4px; }
+  .breakdown-card.trovicel { border-color: rgba(232,255,71,0.2); }
+  .breakdown-card.trovicel .mat { color: var(--trovicel); }
+  .breakdown-card.trovicel .total-mat { color: var(--trovicel); }
+  .breakdown-card.coroplast { border-color: rgba(71,194,255,0.2); }
+  .breakdown-card.coroplast .mat { color: var(--coroplast); }
+  .breakdown-card.coroplast .total-mat { color: var(--coroplast); }
+  .breakdown-card.vinil { border-color: rgba(255,107,53,0.2); }
+  .breakdown-card.vinil .mat { color: var(--vinil); }
+  .breakdown-card.vinil .total-mat { color: var(--vinil); }
+  .breakdown-card.lona { border-color: rgba(180,127,255,0.2); }
+  .breakdown-card.lona .mat { color: var(--lona); }
+  .breakdown-card.lona .total-mat { color: var(--lona); }
+
+  /* ACCIONES */
+  .actions { display: flex; gap: 12px; justify-content: flex-end; }
+  .btn-print {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-print:hover { border-color: var(--text); }
+  .btn-clear {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-clear:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* PRINT */
+  @media print {
+    body { background: white; color: #000; padding: 16px; }
+    .add-panel, .actions, .btn-del, .prices-panel { display: none !important; }
+    :root { --bg: white; --surface: #f5f5f5; --text: #000; --border: #ddd; --muted: #666; --accent: #000; }
+    .title { color: #000; }
+    .chip.trovicel { color: #666; background: #f0f0f0; }
+    .chip.coroplast { color: #666; background: #f0f0f0; }
+    .chip.vinil { color: #666; background: #f0f0f0; }
+    .chip.lona { color: #666; background: #f0f0f0; }
+    .totals-row.grand .val { color: #000; font-size: 20px; }
+    .breakdown-card { border-color: #ddd !important; }
+    .breakdown-card .mat, .breakdown-card .total-mat { color: #000 !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="brand">Cotizador de Materiales</div>
+    <div class="title">IMPRESIÓN & ROTULACIÓN</div>
+  </div>
+  <div class="meta-inputs">
+    <div class="meta-field">
+      <label>Cliente</label>
+      <input type="text" id="clientName" placeholder="Nombre del cliente">
+    </div>
+    <div class="meta-field">
+      <label>Proyecto</label>
+      <input type="text" id="projectName" placeholder="Nombre del proyecto">
+    </div>
+  </div>
+</div>
+
+<!-- PRECIOS EDITABLES -->
+<div class="prices-panel">
+  <div class="prices-title">Precios por m² (editables)</div>
+  <div class="prices-grid">
+    <div class="price-item">
+      <div class="price-label">Trovicel</div>
+      <div class="price-input-wrap">
+        <span>$</span>
+        <input class="price-input" id="p_trovicel" type="number" value="950" min="0" step="1">
+      </div>
+      <div class="price-sub">por metro cuadrado</div>
+    </div>
+    <div class="price-item">
+      <div class="price-label">Coroplast</div>
+      <div class="price-input-wrap">
+        <span>$</span>
+        <input class="price-input" id="p_coroplast" type="number" value="370" min="0" step="1">
+      </div>
+      <div class="price-sub">por metro cuadrado</div>
+    </div>
+    <div class="price-item">
+      <div class="price-label">Vinil</div>
+      <div class="price-input-wrap">
+        <span>$</span>
+        <input class="price-input" id="p_vinil" type="number" value="190" min="0" step="1">
+      </div>
+      <div class="price-sub">por metro cuadrado</div>
+    </div>
+    <div class="price-item">
+      <div class="price-label">Lona</div>
+      <div class="price-input-wrap">
+        <span>$</span>
+        <input class="price-input" id="p_lona" type="number" value="145" min="0" step="1">
+      </div>
+      <div class="price-sub">por metro cuadrado</div>
+    </div>
+  </div>
+</div>
+
+<!-- AGREGAR ITEM -->
+<div class="add-panel">
+  <div class="add-title">Agregar ítem</div>
+  <div class="add-form">
+    <div class="field">
+      <label>Descripción (opcional)</label>
+      <input type="text" id="desc" placeholder="Ej: Banner entrada principal">
+    </div>
+    <div class="field">
+      <label>Material</label>
+      <select id="material">
+        <option value="trovicel">Trovicel</option>
+        <option value="coroplast">Coroplast</option>
+        <option value="vinil">Vinil</option>
+        <option value="lona">Lona</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Cantidad</label>
+      <input type="number" id="qty" value="1" min="1" step="1">
+    </div>
+    <div class="field">
+      <label>Ancho (cm)</label>
+      <input type="number" id="ancho" placeholder="120" min="1" step="0.1">
+    </div>
+    <div class="field">
+      <label>Alto (cm)</label>
+      <input type="number" id="alto" placeholder="90" min="1" step="0.1">
+    </div>
+    <button class="btn-add" onclick="addItem()">+ Agregar</button>
+  </div>
+</div>
+
+<!-- TABLA -->
+<div class="table-panel">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Descripción</th>
+        <th>Material</th>
+        <th>Dimensiones</th>
+        <th>m²</th>
+        <th>Cant.</th>
+        <th>Precio/m²</th>
+        <th>Subtotal</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="itemsBody">
+      <tr class="empty-row">
+        <td colspan="9">Agrega ítems usando el formulario de arriba</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- DESGLOSE POR MATERIAL -->
+<div class="breakdown-panel" id="breakdownPanel" style="display:none">
+  <div class="breakdown-title">Desglose por material</div>
+  <div class="breakdown-grid">
+    <div class="breakdown-card trovicel">
+      <div class="mat">Trovicel</div>
+      <div class="m2" id="b_trovicel_m2">— m²</div>
+      <div class="total-mat" id="b_trovicel_total">$0</div>
+    </div>
+    <div class="breakdown-card coroplast">
+      <div class="mat">Coroplast</div>
+      <div class="m2" id="b_coroplast_m2">— m²</div>
+      <div class="total-mat" id="b_coroplast_total">$0</div>
+    </div>
+    <div class="breakdown-card vinil">
+      <div class="mat">Vinil</div>
+      <div class="m2" id="b_vinil_m2">— m²</div>
+      <div class="total-mat" id="b_vinil_total">$0</div>
+    </div>
+    <div class="breakdown-card lona">
+      <div class="mat">Lona</div>
+      <div class="m2" id="b_lona_m2">— m²</div>
+      <div class="total-mat" id="b_lona_total">$0</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOTALES -->
+<div class="totals-panel">
+  <div class="totals-box">
+    <div class="totals-row">
+      <span class="label">Subtotal</span>
+      <span class="val" id="subtotalVal">$0.00</span>
+    </div>
+    <div class="discount-row">
+      <label>Descuento por volumen</label>
+      <input type="number" id="discountPct" value="0" min="0" max="100" step="1" oninput="calcTotals()">
+      <span>%</span>
+    </div>
+    <div class="totals-row discount" id="discountRow" style="display:none">
+      <span class="label">Descuento aplicado</span>
+      <span class="val" id="discountVal">-$0.00</span>
+    </div>
+    <div class="totals-row grand">
+      <span class="label">Total General</span>
+      <span class="val" id="grandTotal">$0.00</span>
+    </div>
+  </div>
+</div>
+
+<div class="actions">
+  <button class="btn-clear" onclick="clearAll()">Limpiar cotización</button>
+  <button class="btn-print" onclick="window.print()">🖨 Imprimir / Exportar</button>
+</div>
+
+<script>
+  let items = [];
+  let counter = 0;
+
+  const prices = {
+    trovicel: () => parseFloat(document.getElementById('p_trovicel').value) || 950,
+    coroplast: () => parseFloat(document.getElementById('p_coroplast').value) || 370,
+    vinil: () => parseFloat(document.getElementById('p_vinil').value) || 190,
+    lona: () => parseFloat(document.getElementById('p_lona').value) || 145,
+  };
+
+  const matNames = { trovicel: 'Trovicel', coroplast: 'Coroplast', vinil: 'Vinil', lona: 'Lona' };
+
+  function fmx(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function fm2(n) { return n.toFixed(4) + ' m²'; }
+
+  function addItem() {
+    const mat = document.getElementById('material').value;
+    const qty = parseInt(document.getElementById('qty').value) || 1;
+    const ancho = parseFloat(document.getElementById('ancho').value);
+    const alto = parseFloat(document.getElementById('alto').value);
+    const desc = document.getElementById('desc').value.trim();
+
+    if (!ancho || !alto || ancho <= 0 || alto <= 0) {
+      document.getElementById('ancho').style.borderColor = '#ff4444';
+      document.getElementById('alto').style.borderColor = '#ff4444';
+      setTimeout(() => {
+        document.getElementById('ancho').style.borderColor = '';
+        document.getElementById('alto').style.borderColor = '';
+      }, 1500);
+      return;
+    }
+
+    const m2raw = (ancho / 100) * (alto / 100);
+    const m2 = Math.max(m2raw, 1); // mínimo 1 m²
+    const precioUnitario = prices[mat]();
+    const subtotal = precioUnitario * m2 * qty;
+
+    counter++;
+    items.push({ id: counter, mat, qty, ancho, alto, m2: m2raw, precioUnitario, subtotal: precioUnitario * m2raw * qty, desc });
+
+    document.getElementById('desc').value = '';
+    document.getElementById('ancho').value = '';
+    document.getElementById('alto').value = '';
+    document.getElementById('qty').value = '1';
+
+    renderTable();
+    calcTotals();
+  }
+
+  function removeItem(id) {
+    items = items.filter(i => i.id !== id);
+    renderTable();
+    calcTotals();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('itemsBody');
+    if (items.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="9">Agrega ítems usando el formulario de arriba</td></tr>';
+      document.getElementById('breakdownPanel').style.display = 'none';
+      return;
+    }
+    document.getElementById('breakdownPanel').style.display = '';
+    tbody.innerHTML = items.map((item, idx) => {
+      const p = prices[item.mat]();
+      const sub = p * item.m2 * item.qty;
+      return `
+        <tr>
+          <td style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px">${idx + 1}</td>
+          <td style="font-size:13px">${item.desc || '—'}</td>
+          <td><span class="chip ${item.mat}">${matNames[item.mat]}</span></td>
+          <td style="font-family:'DM Mono',monospace;font-size:12px">${item.ancho} × ${item.alto} cm</td>
+          <td class="amount">${item.m2.toFixed(4)}</td>
+          <td class="amount">${item.qty}</td>
+          <td class="amount">${fmx(p)}</td>
+          <td class="subtotal">${fmx(sub)}</td>
+          <td><button class="btn-del" onclick="removeItem(${item.id})">×</button></td>
+        </tr>`;
+    }).join('');
+  }
+
+  function calcTotals() {
+    // Recalcular con precios actuales
+    let subtotal = 0;
+    const breakdown = { trovicel: { m2: 0, total: 0 }, coroplast: { m2: 0, total: 0 }, vinil: { m2: 0, total: 0 }, lona: { m2: 0, total: 0 } };
+
+    items.forEach(item => {
+      const p = prices[item.mat]();
+      const sub = p * item.m2 * item.qty;
+      subtotal += sub;
+      breakdown[item.mat].m2 += item.m2 * item.qty;
+      breakdown[item.mat].total += sub;
+    });
+
+    const discPct = parseFloat(document.getElementById('discountPct').value) || 0;
+    const discount = subtotal * (discPct / 100);
+    const grand = subtotal - discount;
+
+    document.getElementById('subtotalVal').textContent = fmx(subtotal);
+    document.getElementById('grandTotal').textContent = fmx(grand);
+
+    if (discPct > 0) {
+      document.getElementById('discountRow').style.display = '';
+      document.getElementById('discountVal').textContent = '-' + fmx(discount);
+    } else {
+      document.getElementById('discountRow').style.display = 'none';
+    }
+
+    // Breakdown cards
+    ['trovicel', 'coroplast', 'vinil', 'lona'].forEach(mat => {
+      const b = breakdown[mat];
+      document.getElementById(`b_${mat}_m2`).textContent = b.m2 > 0 ? b.m2.toFixed(4) + ' m²' : '— m²';
+      document.getElementById(`b_${mat}_total`).textContent = b.total > 0 ? fmx(b.total) : '$0';
+    });
+
+    // Re-render table para reflejar precios actualizados
+    renderTable();
+  }
+
+  function clearAll() {
+    if (items.length === 0) return;
+    if (confirm('¿Limpiar toda la cotización?')) {
+      items = [];
+      counter = 0;
+      document.getElementById('discountPct').value = 0;
+      renderTable();
+      calcTotals();
+    }
+  }
+
+  // Actualizar totales cuando cambien precios
+  ['p_trovicel','p_coroplast','p_vinil','p_lona'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calcTotals);
+  });
+
+  // Enter en el formulario
+  ['desc','material','qty','ancho','alto'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+      if (e.key === 'Enter') addItem();
+    });
+  });
+</script>
+</body>
+</html>
